@@ -9,6 +9,27 @@ body {
     background: linear-gradient(to bottom, #b4f6ff, #ffffff); /* Gradient sáng cho light mode */
     transition: background 0.3s ease;
 }
+/* Áp dụng cho toàn bộ trang */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-y: scroll; /* Vẫn cuộn theo chiều dọc */
+    scrollbar-width: none; /* Ẩn scrollbar trên Firefox */
+    -ms-overflow-style: none; /* Ẩn scrollbar trên IE, Edge cũ */
+}
+
+/* Ẩn scrollbar trên Chrome, Safari (WebKit) */
+html::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+button:hover,
+.icon-btn:hover,
+.option-btn:hover {
+    background-color: #ff9800;
+    transform: scale(1.05);
+}
 
 /* Lớp ẩn các phần tử */
 .hidden {
@@ -43,7 +64,7 @@ body {
 }
 
 .sidebar li:hover {
-    background-color: #eee; /* Màu nền khi hover */
+    background-color: #ffaeae00; /* Màu nền khi hover */
 }
 
 /* Header chính */
@@ -52,8 +73,14 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 10px 20px;
-    background-color: #8ef6ff; /* Tím đậm cho header */
+    background-color: #8ef6ff; /* Màu header light mode */
     color: white;
+    transition: background-color 0.3s ease;
+}
+
+/* Header dark mode */
+.dark-mode .main-header {
+    background-color: #1a2a44; /* Màu header dark mode */
     transition: background-color 0.3s ease;
 }
 
@@ -79,69 +106,118 @@ body {
     transform: scale(1.05);
 }
 
-/* Thẻ quiz */
+/* Thẻ quiz (Light Mode) */
 .quiz-card {
-    background-color: #2a4066; /* Xanh đậm cho thẻ */
+    background-color: #e0f7fa;
+    color: #333;
     padding: 40px;
     border-radius: 10px;
     text-align: center;
     width: 80vw;
+    max-width: 1500px;
     margin: 20px auto;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s ease;
+    min-height: 400px; /* Thêm chiều cao tối thiểu */
 }
 
 @media (max-width: 768px) {
     .quiz-card {
         width: 90vw;
+        padding: 20px;
+        min-height: 350px; /* Điều chỉnh cho màn hình nhỏ */
     }
 }
+
+
 
 /* Header của quiz */
 .quiz-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: space-between; /* Đẩy nút trái và phải ra 2 mép */
+    align-items: center;           /* Căn giữa theo chiều dọc */
+    /* Bạn có thể thêm height, padding, hoặc background nếu muốn */
 }
 
-/* Nút icon */
+.quiz-question {
+    text-align: center;  /* Căn giữa nội dung bên trong (Kanji, v.v.) */
+    flex: 1;             /* Chiếm toàn bộ không gian còn lại giữa 2 nút */
+}
+
+/* Nút icon (bóng đèn) Light Mode */
 .icon-btn {
-    background-color: transparent;
+    background: none !important;
     border: none;
     font-size: 1.5em;
     cursor: pointer;
-    color: #ffffff;
+    color: #333; /* Màu mặc định cho light mode */
     transition: color 0.3s ease;
 }
 
-.icon-btn:hover {
+/* Áp dụng cho dark mode */
+.dark-mode .icon-btn {
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    color: #ffffff; /* Màu mặc định cho dark mode */
+}
+
+/* Trạng thái active */
+.icon-btn.active {
+    color: #ffc70f; /* Vàng khi active ở light mode */
+}
+.dark-mode .icon-btn.active {
+    color: #eada4b; /* Vàng khi active ở dark mode */
+}
+
+/* Hiệu ứng hover cho cả 2 giao diện */
+.icon-btn:hover,
+.dark-mode .icon-btn:hover {
     color: #ff9800; /* Cam khi hover */
 }
 
-/* Từ Kanji trong quiz */
-#quiz-kanji {
-    font-size: 3em;
-    color: red;
-    margin: 0;
+.icon-btn i {
+    color: inherit; /* Để icon kế thừa màu của nút */
 }
 
-/* Nghĩa của từ trong quiz */
-#quiz-meaning {
-    font-size: 1.5em;
-    color: white;
-    margin: 10px 0 0 0;
+#quiz-kanji {
+    font-size: clamp(1.5em, 5vw, 3em);
+    color: #ae2c2c;
+    margin: 0 auto;         /* Căn giữa theo chiều ngang */
+    text-align: center;     /* Căn giữa nội dung bên trong */
+    display: block;         /* Dùng block để margin auto có tác dụng */
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
 }
+
+.dark-mode #quiz-kanji {
+    color: #ff4130; /* Màu chữ khác cho dark mode */
+}
+
+#quiz-meaning {
+    color: #333; /* Hoặc #000 nếu muốn đen hẳn */
+}
+
+/* Màu chữ ở Dark Mode */
+.dark-mode #quiz-meaning {
+    color: #fff; /* Giữ nguyên màu trắng */
+}
+
 
 /* Nút phát âm thanh */
 .play-audio-btn {
-    background-color: transparent;
-    border: none;
     font-size: 1.5em;
-    cursor: pointer;
-    color: #ffffff;
-    transition: color 0.3s ease;
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
+.play-audio-btn:hover {
+    transform: scale(1.1);
+}
 /* Thanh tiến độ */
 .progress-bar {
     position: relative;
@@ -171,7 +247,7 @@ body {
     font-weight: bold;
 }
 
-/* Các lựa chọn trong quiz */
+/* Các lựa chọn trong quiz (Light Mode) */
 .options {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -180,19 +256,19 @@ body {
 }
 
 .option-btn {
+    background-color: #a1d0ff; /* Xanh nhạt */
+    color: #333;              /* Chữ đậm */
     padding: 20px;
-    border: 1px solid #ddd;
+    border: 1px solid #000000;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1.5em;
-    background-color: #2a4066; /* Xanh đậm */
-    color: white;
     transition: background-color 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
 }
 
 .option-btn:hover {
     background-color: #ff9800; /* Cam khi hover */
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
 .option-btn.correct {
@@ -212,20 +288,20 @@ body {
     color: white;
 }
 
-/* Nút điều hướng */
+/* Nút điều hướng (Light Mode) */
 .navigation button {
+    background-color: #4caf50; /* Xanh lá */
+    color: #ffffff;
     padding: 10px 20px;
     margin: 5px;
     border: none;
     border-radius: 20px;
-    background-color: #1a2a44; /* Xanh đậm */
-    color: white;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .navigation button:hover {
-    background-color: #ff9800; /* Cam khi hover */
+    background-color: #45a049; /* Xanh lá đậm hơn khi hover */
     transform: scale(1.05);
 }
 
@@ -351,12 +427,14 @@ input:checked + .slider:before {
     background-color: #2a4066; /* Xanh đậm */
 }
 
-.dark-mode .icon-btn, .dark-mode .play-audio-btn {
+.dark-mode .icon-btn,
+.dark-mode .play-audio-btn {
     color: #ffffff;
 }
 
+/* Thẻ câu trả lời Dark Mode - đậm hơn 1 chút */
 .dark-mode .option-btn {
-    background-color: #2a4066; /* Xanh đậm */
+    background-color: #1a2a44; /* Đậm hơn so với #2a4066 */
     color: #ffffff;
     border: 1px solid #555555; /* Viền xám đậm */
 }
@@ -390,7 +468,8 @@ input:checked + .slider:before {
     background-color: #ff9800; /* Cam khi hover */
 }
 
-.dark-mode input[type="text"], .dark-mode input[type="file"] {
+.dark-mode input[type="text"],
+.dark-mode input[type="file"] {
     background-color: #333333; /* Xám đậm */
     color: #ffffff;
     border: 1px solid #555555;
@@ -443,7 +522,8 @@ input:checked + .slider:before {
     form {
         flex-direction: column;
     }
-    input[type="text"], input[type="file"] {
+    input[type="text"],
+    input[type="file"] {
         width: 100%;
     }
 }

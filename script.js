@@ -572,4 +572,11 @@ function updateProgressBar() {
     const progressPercent = totalVocab > 0 ? (correctWords.size / totalVocab) * 100 : 0;
     document.getElementById('progress').style.width = `${progressPercent}%`;
     document.getElementById('progress-text').textContent = `${correctWords.size}/${totalVocab}`;
+    document.addEventListener('DOMContentLoaded', function() {
+        var showMeaningBtn = document.getElementById('show-meaning-btn');
+        showMeaningBtn.addEventListener('click', function() {
+          this.classList.toggle('active');
+        });
+      });
+          
 }
