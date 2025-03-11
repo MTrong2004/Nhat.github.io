@@ -1,0 +1,449 @@
+/* Nhúng font Roboto từ Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+/* Thiết lập cơ bản cho body */
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to bottom, #b4f6ff, #ffffff); /* Gradient sáng cho light mode */
+    transition: background 0.3s ease;
+}
+
+/* Lớp ẩn các phần tử */
+.hidden {
+    display: none;
+}
+
+/* Container chính */
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 200px;
+    background-color: #f8f9fa; /* Xám nhạt cho sidebar */
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar li {
+    padding: 15px;
+    cursor: pointer;
+    color: #333; /* Xám đậm cho chữ */
+    transition: background-color 0.3s ease;
+}
+
+.sidebar li:hover {
+    background-color: #eee; /* Màu nền khi hover */
+}
+
+/* Header chính */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #8ef6ff; /* Tím đậm cho header */
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+/* Section chung */
+.section {
+    padding: 20px;
+}
+
+/* Nút quick links */
+.quick-links button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 20px;
+    background-color: #1e3a8a; /* Xanh dương đậm */
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.quick-links button:hover {
+    background-color: #ff9800; /* Cam khi hover */
+    transform: scale(1.05);
+}
+
+/* Thẻ quiz */
+.quiz-card {
+    background-color: #2a4066; /* Xanh đậm cho thẻ */
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+    width: 80vw;
+    margin: 20px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .quiz-card {
+        width: 90vw;
+    }
+}
+
+/* Header của quiz */
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Nút icon */
+.icon-btn {
+    background-color: transparent;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    color: #ffffff;
+    transition: color 0.3s ease;
+}
+
+.icon-btn:hover {
+    color: #ff9800; /* Cam khi hover */
+}
+
+/* Từ Kanji trong quiz */
+#quiz-kanji {
+    font-size: 3em;
+    color: red;
+    margin: 0;
+}
+
+/* Nghĩa của từ trong quiz */
+#quiz-meaning {
+    font-size: 1.5em;
+    color: white;
+    margin: 10px 0 0 0;
+}
+
+/* Nút phát âm thanh */
+.play-audio-btn {
+    background-color: transparent;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    color: #ffffff;
+    transition: color 0.3s ease;
+}
+
+/* Thanh tiến độ */
+.progress-bar {
+    position: relative;
+    width: 100%;
+    background-color: #ddd; /* Xám nhạt */
+    height: 20px;
+    margin: 10px 0;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.progress {
+    width: 0%;
+    height: 100%;
+    background-color: #4caf50; /* Xanh lá */
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    color: #000;
+    font-weight: bold;
+}
+
+/* Các lựa chọn trong quiz */
+.options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.option-btn {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.5em;
+    background-color: #2a4066; /* Xanh đậm */
+    color: white;
+    transition: background-color 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+
+.option-btn:hover {
+    background-color: #ff9800; /* Cam khi hover */
+    transform: scale(1.05);
+}
+
+.option-btn.correct {
+    background-color: green;
+    color: white;
+}
+
+.option-btn.incorrect {
+    background-color: red;
+    color: white;
+}
+
+/* Phản hồi quiz */
+#quiz-feedback {
+    margin: 10px 0;
+    font-size: 1.2em;
+    color: white;
+}
+
+/* Nút điều hướng */
+.navigation button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 20px;
+    background-color: #1a2a44; /* Xanh đậm */
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.navigation button:hover {
+    background-color: #ff9800; /* Cam khi hover */
+    transform: scale(1.05);
+}
+
+/* Bảng */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd; /* Viền xám nhạt */
+    padding: 8px;
+    text-align: left;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+th {
+    background-color: #f2f2f2; /* Xám nhạt cho header */
+}
+
+/* Form */
+form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+input[type="text"], input[type="file"] {
+    padding: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+button {
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Nút chuyển đổi Dark Mode */
+.dark-mode-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, #e0f7fa, #ffffff); /* Gradient cho light mode */
+    transition: background 0.3s ease;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: transform 0.3s ease;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background: linear-gradient(to bottom, #0a1a34, #1e3a8a); /* Gradient cho dark mode */
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.icon-sun {
+    font-size: 20px;
+    margin-right: 10px;
+    color: #ffeb3b; /* Vàng cho mặt trời */
+}
+
+.icon-moon {
+    font-size: 20px;
+    margin-right: 10px;
+    color: #ffffff; /* Trắng cho mặt trăng */
+}
+
+/* Chế độ Dark Mode */
+.dark-mode {
+    background: linear-gradient(to bottom, #0a1a34, #1e3a8a); /* Gradient cho dark mode */
+    color: #ffffff;
+    transition: background 0.3s ease;
+}
+
+.dark-mode .sidebar {
+    background-color: #1e1e1e; /* Xám đậm */
+}
+
+.dark-mode .sidebar li {
+    color: #ffffff;
+}
+
+.dark-mode .sidebar li:hover {
+    background-color: #333; /* Xám đậm hơn khi hover */
+}
+
+.dark-mode .quiz-card {
+    background-color: #2a4066; /* Xanh đậm */
+}
+
+.dark-mode .icon-btn, .dark-mode .play-audio-btn {
+    color: #ffffff;
+}
+
+.dark-mode .option-btn {
+    background-color: #2a4066; /* Xanh đậm */
+    color: #ffffff;
+    border: 1px solid #555555; /* Viền xám đậm */
+}
+
+.dark-mode .option-btn:hover {
+    background-color: #ff9800; /* Cam khi hover */
+}
+
+.dark-mode .option-btn.correct {
+    background-color: #4caf50; /* Xanh lá */
+}
+
+.dark-mode .option-btn.incorrect {
+    background-color: #f44336; /* Đỏ */
+}
+
+.dark-mode table th {
+    background-color: #333333; /* Xám đậm */
+}
+
+.dark-mode table td {
+    border-color: #555555; /* Viền xám đậm */
+}
+
+.dark-mode button {
+    background-color: #1a2a44; /* Xanh đậm */
+    color: #ffffff;
+}
+
+.dark-mode button:hover {
+    background-color: #ff9800; /* Cam khi hover */
+}
+
+.dark-mode input[type="text"], .dark-mode input[type="file"] {
+    background-color: #333333; /* Xám đậm */
+    color: #ffffff;
+    border: 1px solid #555555;
+}
+
+/* Form thêm từ vựng */
+#vocab-section form {
+    background-color: #f0f0f0; /* Xám nhạt */
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    transition: background-color 0.3s ease;
+}
+
+#vocab-section input[type="text"] {
+    width: 150px; /* Chiều rộng cố định */
+}
+
+.dark-mode #vocab-section form {
+    background-color: #333333; /* Xám đậm */
+}
+
+.dark-mode #vocab-section input[type="text"] {
+    background-color: #444444; /* Xám đậm hơn */
+    color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+        position: relative;
+    }
+    .section {
+        padding: 10px;
+    }
+    .quiz-card {
+        padding: 20px;
+    }
+    .options {
+        grid-template-columns: 1fr;
+    }
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+    form {
+        flex-direction: column;
+    }
+    input[type="text"], input[type="file"] {
+        width: 100%;
+    }
+}

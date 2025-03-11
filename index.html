@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học Tiếng Nhật</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/wanakana@4.0.0/umd/wanakana.min.js"></script>
+</head>
+<body>
+    <!-- Header chính với nút Dark Mode -->
+    <header class="main-header">
+        <h1>Học Tiếng Nhật</h1>
+        <div class="dark-mode-toggle">
+            <span class="icon-sun"><i class="fas fa-sun"></i></span>
+            <span class="icon-moon hidden"><i class="fas fa-moon"></i></span>
+            <label class="switch">
+                <input type="checkbox" id="dark-mode-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </header>
+
+    <!-- Container chính -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <ul>
+                <li id="nav-home"><i class="fas fa-home"></i> Trang chủ</li>
+                <li id="nav-quiz"><i class="fas fa-question-circle"></i> Quiz</li>
+                <li id="nav-vocab"><i class="fas fa-book"></i> Từ vựng</li>
+                <li id="nav-settings"><i class="fas fa-cog"></i> Cài đặt</li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main>
+            <!-- Trang chủ -->
+            <section id="dashboard" class="section">
+                <div class="dashboard-info">
+                    <p id="total-vocab">Tổng số từ vựng: 0</p>
+                </div>
+                <div class="quick-links">
+                    <button id="quick-quiz"><i class="fas fa-question-circle"></i> Bắt đầu Quiz</button>
+                    <button id="quick-add-vocab"><i class="fas fa-plus"></i> Thêm từ vựng</button>
+                    <button id="reset-vocab"><i class="fas fa-sync-alt"></i> Reset từ vựng mặc định</button>
+                </div>
+            </section>
+
+            <!-- Quiz -->
+            <section id="quiz-section" class="section hidden">
+                <div class="quiz-card">
+                    <div class="quiz-header">
+                        <button id="show-meaning-btn" class="icon-btn"><i class="fas fa-lightbulb"></i></button>
+                        <div class="quiz-question">
+                            <h3 id="quiz-kanji"></h3>
+                            <p id="quiz-meaning" class="hidden"></p>
+                        </div>
+                        <button onclick="playQuizAudio()" class="play-audio-btn">🔊</button>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" id="progress"></div>
+                        <span id="progress-text" class="progress-text">0/0</span>
+                    </div>
+                    <div class="options">
+                        <button class="option-btn"></button>
+                        <button class="option-btn"></button>
+                        <button class="option-btn"></button>
+                        <button class="option-btn"></button>
+                    </div>
+                    <p id="quiz-feedback"></p>
+                    <div class="navigation">
+                        <button id="quiz-restart"><i class="fas fa-redo"></i> Bắt đầu lại</button>
+                        <button id="quiz-next">Câu tiếp theo <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quản lý từ vựng -->
+            <section id="vocab-section" class="section hidden">
+                <p id="total-vocab-count">Tổng số từ vựng: 0</p>
+                <form id="add-vocab-form">
+                    <input type="text" id="kanji" placeholder="Kanji">
+                    <input type="text" id="hiragana" placeholder="Hiragana/Katakana" required>
+                    <input type="text" id="romaji" placeholder="Romaji">
+                    <input type="text" id="meaning" placeholder="Nghĩa" required>
+                    <button type="submit"><i class="fas fa-plus"></i> Thêm</button>
+                </form>
+                <div id="import-vocab">
+                    <h3>Import Từ Vựng Từ File Excel</h3>
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls">
+                    <button id="import-excel-btn"><i class="fas fa-file-import"></i> Nhập từ vựng (Excel)</button>
+                    <a href="sample.xlsx" download="sample.xlsx"><i class="fas fa-download"></i> Tải file mẫu</a>
+                    <button id="download-excel-btn" style="margin-left: 10px;"><i class="fas fa-download"></i> Tải file Excel từ vựng</button>
+                    <button id="show-trash-btn" style="float: right;"><i class="fas fa-trash-alt"></i> Hiển thị Thùng Rác</button>
+                    <button id="delete-all-vocab-btn" style="float: right; margin-right: 10px;"><i class="fas fa-trash"></i> Xóa tất cả</button>
+                </div>
+                <table id="wordTable">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Kanji</th>
+                            <th>Hiragana/Katakana</th>
+                            <th>Romaji</th>
+                            <th>Nghĩa</th>
+                            <th>Âm thanh</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+
+            <!-- Thùng rác -->
+            <section id="trash-section" class="section hidden">
+                <h2>Thùng Rác</h2>
+                <button id="close-trash-btn"><i class="fas fa-times"></i> Đóng</button>
+                <button id="permanent-delete-all-btn" style="float: right; margin-right: 10px;"><i class="fas fa-trash-alt"></i> Xóa vĩnh viễn tất cả</button>
+                <table id="trashTable">
+                    <thead>
+                        <tr>
+                            <th>Kanji</th>
+                            <th>Hiragana/Katakana</th>
+                            <th>Romaji</th>
+                            <th>Nghĩa</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+
+            <!-- Cài đặt -->
+            <section id="settings-section" class="section hidden">
+                <div class="setting-item">
+                    <label class="switch">
+                        <input type="checkbox" id="randomize-options-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <p>Random đáp án</p>
+                </div>
+                <div>
+                    <label for="retry-interval">Hiển thị lại câu sai sau bao nhiêu câu:</label>
+                    <input type="number" id="retry-interval" min="1" value="10">
+                </div>
+                <div>
+                    <label for="retry-max">Số lần lặp lại tối đa cho mỗi câu sai:</label>
+                    <input type="number" id="retry-max" min="1" value="3">
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Các phần tử âm thanh -->
+    <audio id="correct-sound" src="sound/correct.mp3" preload="auto"></audio>
+    <audio id="incorrect-sound" src="sound/incorrect.mp3" preload="auto"></audio>
+    <audio id="click-sound" src="sound/click.mp3" preload="auto"></audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
