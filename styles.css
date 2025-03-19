@@ -1,14 +1,16 @@
-/* Nhúng font Roboto từ Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+/* Nhúng font Noto Sans JP từ Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
 
 /* Thiết lập cơ bản cho body */
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Noto Sans JP', sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(to bottom, #b4f6ff, #ffffff); /* Gradient sáng cho light mode */
+    background: linear-gradient(to bottom, #e0f7fa, #ffffff); /* Gradient sáng cho light mode */
     transition: background 0.3s ease;
+    overflow-x: hidden; /* Ngăn cuộn ngang */
 }
+
 /* Áp dụng cho toàn bộ trang */
 html, body {
     margin: 0;
@@ -24,22 +26,25 @@ html::-webkit-scrollbar {
     width: 0;
     height: 0;
 }
-button:hover,
-.icon-btn:hover,
-.option-btn:hover {
-    background-color: #ff9800;
-    transform: scale(1.05);
-}
 
 /* Lớp ẩn các phần tử */
 .hidden {
     display: none;
 }
 
+/* Thông báo lỗi */
+#error-message {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #f44336; /* Đỏ cho thông báo lỗi */
+}
+
 /* Container chính */
 .container {
     display: flex;
     min-height: 100vh;
+    width: 100%;
+    flex-direction: row; /* Mặc định cho desktop */
 }
 
 /* Sidebar */
@@ -49,6 +54,8 @@ button:hover,
     padding: 20px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s ease;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
 }
 
 .sidebar ul {
@@ -64,7 +71,7 @@ button:hover,
 }
 
 .sidebar li:hover {
-    background-color: #ffaeae00; /* Màu nền khi hover */
+    background-color: #e0e0e0; /* Xám nhạt khi hover */
 }
 
 /* Header chính */
@@ -72,16 +79,18 @@ button:hover,
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
-    background-color: #8ef6ff; /* Màu header light mode */
+    padding: 15px 20px;
+    background: linear-gradient(to right, #4a90e2, #8ef6ff); /* Gradient cho header light mode */
     color: white;
     transition: background-color 0.3s ease;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Header dark mode */
 .dark-mode .main-header {
-    background-color: #1a2a44; /* Màu header dark mode */
-    transition: background-color 0.3s ease;
+    background: linear-gradient(to right, #1a2a44, #2a4066); /* Gradient cho header dark mode */
 }
 
 /* Section chung */
@@ -90,15 +99,22 @@ button:hover,
 }
 
 /* Nút quick links */
+.quick-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
 .quick-links button {
-    padding: 10px 20px;
-    margin: 5px;
+    padding: 12px 25px;
     border: none;
-    border-radius: 20px;
+    border-radius: 25px;
     background-color: #1e3a8a; /* Xanh dương đậm */
     color: white;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1em;
 }
 
 .quick-links button:hover {
@@ -108,40 +124,31 @@ button:hover,
 
 /* Thẻ quiz (Light Mode) */
 .quiz-card {
-    background-color: #e0f7fa;
+    background-color: #ffffff;
     color: #333;
     padding: 40px;
-    border-radius: 10px;
+    border-radius: 15px;
     text-align: center;
-    width: 80vw;
-    max-width: 1500px;
+    width: 90vw;
+    max-width: 600px;
     margin: 20px auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s ease;
     min-height: 400px; /* Thêm chiều cao tối thiểu */
 }
 
 @media (max-width: 768px) {
     .quiz-card {
-        width: 90vw;
         padding: 20px;
         min-height: 350px; /* Điều chỉnh cho màn hình nhỏ */
     }
 }
 
-
-
 /* Header của quiz */
 .quiz-header {
     display: flex;
-    justify-content: space-between; /* Đẩy nút trái và phải ra 2 mép */
-    align-items: center;           /* Căn giữa theo chiều dọc */
-    /* Bạn có thể thêm height, padding, hoặc background nếu muốn */
-}
-
-.quiz-question {
-    text-align: center;  /* Căn giữa nội dung bên trong (Kanji, v.v.) */
-    flex: 1;             /* Chiếm toàn bộ không gian còn lại giữa 2 nút */
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* Nút icon (bóng đèn) Light Mode */
@@ -156,10 +163,6 @@ button:hover,
 
 /* Áp dụng cho dark mode */
 .dark-mode .icon-btn {
-    background: none !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
     color: #ffffff; /* Màu mặc định cho dark mode */
 }
 
@@ -181,12 +184,13 @@ button:hover,
     color: inherit; /* Để icon kế thừa màu của nút */
 }
 
+/* Nội dung quiz */
 #quiz-kanji {
     font-size: clamp(1.5em, 5vw, 3em);
     color: #ae2c2c;
-    margin: 0 auto;         /* Căn giữa theo chiều ngang */
-    text-align: center;     /* Căn giữa nội dung bên trong */
-    display: block;         /* Dùng block để margin auto có tác dụng */
+    margin: 0 auto;
+    text-align: center;
+    display: block;
     white-space: normal;
     word-break: keep-all;
     overflow-wrap: break-word;
@@ -197,14 +201,12 @@ button:hover,
 }
 
 #quiz-meaning {
-    color: #333; /* Hoặc #000 nếu muốn đen hẳn */
+    color: #333;
 }
 
-/* Màu chữ ở Dark Mode */
 .dark-mode #quiz-meaning {
-    color: #fff; /* Giữ nguyên màu trắng */
+    color: #fff;
 }
-
 
 /* Nút phát âm thanh */
 .play-audio-btn {
@@ -218,6 +220,7 @@ button:hover,
 .play-audio-btn:hover {
     transform: scale(1.1);
 }
+
 /* Thanh tiến độ */
 .progress-bar {
     position: relative;
@@ -229,7 +232,7 @@ button:hover,
     transition: background-color 0.3s ease;
 }
 
-.progress {
+#progress {
     width: 0%;
     height: 100%;
     background-color: #4caf50; /* Xanh lá */
@@ -237,7 +240,7 @@ button:hover,
     transition: width 0.3s ease;
 }
 
-.progress-text {
+#progress-text {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -245,6 +248,19 @@ button:hover,
     font-size: 14px;
     color: #000;
     font-weight: bold;
+}
+
+/* Thanh tiến độ trong dark mode */
+.dark-mode .progress-bar {
+    background-color: #555; /* Xám đậm */
+}
+
+.dark-mode #progress {
+    background-color: #4caf50; /* Xanh lá */
+}
+
+.dark-mode #progress-text {
+    color: #fff; /* Trắng để dễ đọc */
 }
 
 /* Các lựa chọn trong quiz (Light Mode) */
@@ -257,10 +273,10 @@ button:hover,
 
 .option-btn {
     background-color: #a1d0ff; /* Xanh nhạt */
-    color: #333;              /* Chữ đậm */
+    color: #333; /* Chữ đậm */
     padding: 20px;
     border: 1px solid #000000;
-    border-radius: 5px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 1.5em;
     transition: background-color 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
@@ -289,20 +305,25 @@ button:hover,
 }
 
 /* Nút điều hướng (Light Mode) */
-.navigation button {
-    background-color: #4caf50; /* Xanh lá */
-    color: #ffffff;
-    padding: 10px 20px;
-    margin: 5px;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+.navigation {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
 }
 
-.navigation button:hover {
-    background-color: #45a049; /* Xanh lá đậm hơn khi hover */
-    transform: scale(1.05);
+.nav-btn {
+    background: #4a90e2;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    background: #357abd;
 }
 
 /* Bảng */
@@ -432,7 +453,7 @@ input:checked + .slider:before {
     color: #ffffff;
 }
 
-/* Thẻ câu trả lời Dark Mode - đậm hơn 1 chút */
+/* Thẻ câu trả lời Dark Mode */
 .dark-mode .option-btn {
     background-color: #1a2a44; /* Đậm hơn so với #2a4066 */
     color: #ffffff;
@@ -504,7 +525,18 @@ input:checked + .slider:before {
     }
     .sidebar {
         width: 100%;
-        position: relative;
+        padding: 10px;
+        display: flex;
+        justify-content: space-around;
+    }
+    .sidebar ul {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .sidebar li {
+        padding: 10px;
+        font-size: 0.9em;
     }
     .section {
         padding: 10px;
@@ -526,4 +558,195 @@ input:checked + .slider:before {
     input[type="file"] {
         width: 100%;
     }
+    .navigation {
+        flex-direction: column;
+        align-items: center;
+    }
+    .nav-btn {
+        width: 100%;
+        max-width: 200px;
+    }
+    .quick-links {
+        flex-direction: column;
+        align-items: center;
+    }
+    .quick-links button {
+        width: 80%;
+        max-width: 250px;
+    }
+}
+
+/* Phần chọn bài học */
+#lesson-selection, #flashcard-lesson-selection {
+    width: 100%;
+    max-width: 800px;
+    padding: 20px;
+    background-color: #ffffff; /* Light mode */
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+#lesson-selection h3, #flashcard-lesson-selection h3 {
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.lesson-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.lesson-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    background-color: #4a90e2; /* Light mode */
+    color: #ffffff;
+}
+
+.lesson-buttons button.selected {
+    background-color: #4caf50; /* Màu xanh lá cây khi được chọn */
+}
+
+.lesson-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.lesson-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #4a90e2; /* Light mode */
+    color: #ffffff;
+}
+
+/* Dark Mode cho phần chọn bài học */
+body.dark-mode #lesson-selection, body.dark-mode #flashcard-lesson-selection {
+    background-color: #2a4066;
+}
+
+body.dark-mode .lesson-buttons button {
+    background-color: #ff9800; /* Màu cam trong dark mode */
+    color: #ffffff;
+}
+
+body.dark-mode .lesson-buttons button.selected {
+    background-color: #4caf50; /* Màu xanh lá cây khi được chọn */
+}
+
+body.dark-mode .lesson-actions button {
+    background-color: #ff9800;
+    color: #ffffff;
+}
+
+/* Thông báo số lượng từ vựng đã chọn */
+#selected-vocab-count {
+    font-size: 1.1em;
+    color: #333;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.dark-mode #selected-vocab-count {
+    color: #ffffff;
+}
+
+/* Định dạng thông báo */
+.notification {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4caf50; /* Màu xanh lá */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+
+.notification.hidden {
+    opacity: 0;
+    display: none;
+}
+
+/* Hiệu ứng nổi bật cho hàng */
+.highlight {
+    background-color: yellow;
+    transition: background-color 0.5s ease;
+}
+
+/* Đảm bảo màu chữ vẫn rõ ràng trong dark mode */
+.dark-mode .notification {
+    background-color: #4caf50;
+    color: white;
+}
+
+/* Thanh thêm từ vựng cố định */
+#add-vocab-form {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Điều chỉnh cho dark mode */
+.dark-mode #add-vocab-form {
+    border-bottom: 1px solid #555;
+}
+
+/* Bộ lọc bài học */
+#lesson-filter {
+    margin-bottom: 20px;
+}
+
+#lesson-select {
+    padding: 5px;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+}
+
+.dark-mode #lesson-select {
+    background-color: #444444;
+    color: #ffffff;
+    border: 1px solid #555555;
+}
+
+/* Thẻ flashcard */
+.flashcard-card {
+    background-color: #ffffff;
+    color: #333;
+    padding: 40px;
+    border-radius: 15px;
+    text-align: center;
+    width: 90vw;
+    max-width: 600px;
+    margin: 20px auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+    min-height: 400px;
+}
+
+.dark-mode .flashcard-card {
+    background-color: #2a4066;
+    color: #ffffff;
+}
+
+.flashcard-front, .flashcard-back {
+    font-size: clamp(1.5em, 5vw, 3em);
+}
+
+.flashcard-back p {
+    font-size: 1.2em;
+    margin: 10px 0;
 }

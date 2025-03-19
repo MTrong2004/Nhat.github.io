@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Học Tiếng Nhật</title>
+    <!-- Liên kết đến Font Awesome từ CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Liên kết đến file CSS local -->
     <link rel="stylesheet" href="styles.css">
+    <!-- Liên kết đến Wanakana từ CDN -->
     <script src="https://cdn.jsdelivr.net/npm/wanakana@4.0.0/umd/wanakana.min.js"></script>
 </head>
 <body>
-    <!-- Header chính với nút Dark Mode -->
+    <!-- Header chính -->
     <header class="main-header">
         <h1>Học Tiếng Nhật</h1>
         <div class="dark-mode-toggle">
@@ -21,22 +24,23 @@
             </label>
         </div>
     </header>
-
+    <!-- Thông báo -->
+    <div id="notification" class="notification hidden">Đã sửa xong!</div>
     <!-- Container chính -->
     <div class="container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <ul>
-                <li id="nav-home"><i class="fas fa-home"></i> Trang chủ</li>
-                <li id="nav-quiz"><i class="fas fa-question-circle"></i> Quiz</li>
-                <li id="nav-vocab"><i class="fas fa-book"></i> Từ vựng</li>
-                <li id="nav-settings"><i class="fas fa-cog"></i> Cài đặt</li>
+                <li id="nav-home"><i class="fas fa-home" aria-label="Trang chủ"></i> Trang chủ</li>
+                <li id="nav-quiz"><i class="fas fa-question-circle" aria-label="Quiz"></i> Quiz</li>
+                <li id="nav-vocab"><i class="fas fa-book" aria-label="Từ vựng"></i> Từ vựng</li>
+                <li id="nav-settings"><i class="fas fa-cog" aria-label="Cài đặt"></i> Cài đặt</li>
             </ul>
         </aside>
 
         <!-- Main content -->
         <main>
-            <!-- Trang chủ -->
+            <!-- Section Trang chủ -->
             <section id="dashboard" class="section">
                 <div class="dashboard-info">
                     <p id="total-vocab">Tổng số từ vựng: 0</p>
@@ -48,36 +52,75 @@
                 </div>
             </section>
 
-            <!-- Quiz -->
+            <!-- Section Quiz -->
             <section id="quiz-section" class="section hidden">
-                <div class="quiz-card">
+                <div id="lesson-selection">
+                    <h3>Chọn bài học:</h3>
+                    <div class="lesson-buttons" id="lesson-buttons">
+                        <!-- Các nút bài học sẽ được thêm động bằng JavaScript -->
+                    </div>
+                    <div class="lesson-actions">
+                        <button type="button" id="select-all-btn">Chọn tất cả</button>
+                        <button type="button" id="start-quiz-btn">Bắt đầu Quiz</button>
+                    </div>
+                    <p id="selected-vocab-count" style="text-align: center; margin-top: 10px;">Đã chọn: 0 từ vựng</p>
+                    <div id="error-message" class="hidden" style="color: red; text-align: center; margin-top: 10px;">
+                        Bài học đã chọn phải có ít nhất 4 từ vựng để bắt đầu quiz. Vui lòng thêm từ vựng.
+                    </div>
+                </div>
+                <div class="quiz-card hidden">
                     <div class="quiz-header">
-                        <button id="show-meaning-btn" class="icon-btn"><i class="fas fa-lightbulb"></i></button>
+                        <button type="button" id="show-meaning-btn" class="icon-btn"><i class="fas fa-lightbulb"></i></button>
                         <div class="quiz-question">
                             <h3 id="quiz-kanji"></h3>
                             <p id="quiz-meaning" class="hidden"></p>
                         </div>
-                        <button onclick="playQuizAudio()" class="play-audio-btn">🔊</button>
+                        <button type="button" onclick="playQuizAudio()" class="play-audio-btn">🔊</button>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress" id="progress"></div>
-                        <span id="progress-text" class="progress-text">0/0</span>
+                        <div id="progress"></div>
+                        <span id="progress-text">0/0</span>
                     </div>
                     <div class="options">
-                        <button class="option-btn"></button>
-                        <button class="option-btn"></button>
-                        <button class="option-btn"></button>
-                        <button class="option-btn"></button>
+                        <button type="button" class="option-btn"></button>
+                        <button type="button" class="option-btn"></button>
+                        <button type="button" class="option-btn"></button>
+                        <button type="button" class="option-btn"></button>
                     </div>
                     <p id="quiz-feedback"></p>
                     <div class="navigation">
-                        <button id="quiz-restart"><i class="fas fa-redo"></i> Bắt đầu lại</button>
-                        <button id="quiz-next">Câu tiếp theo <i class="fas fa-arrow-right"></i></button>
+                        <button type="button" id="back-to-lessons" class="nav-btn">Quay lại chọn bài học</button>
+                        <button type="button" id="quiz-restart" class="nav-btn"><i class="fas fa-redo"></i> Bắt đầu lại</button>
+                        <button type="button" id="quiz-next" class="nav-btn">Câu tiếp theo <i class="fas fa-arrow-right"></i></button>
                     </div>
                 </div>
             </section>
-
-            <!-- Quản lý từ vựng -->
+<section id="flashcard-section" class="section hidden">
+    <!-- Phần chọn bài học -->
+    <div id="flashcard-lesson-selection">
+        <h3>Chọn bài học cho Flashcard:</h3>
+        <div class="lesson-buttons" id="flashcard-lesson-buttons"></div>
+        <div class="lesson-actions">
+            <button type="button" id="flashcard-select-all-btn">Chọn tất cả</button>
+            <button type="button" id="start-flashcard-btn">Bắt đầu Flashcard</button>
+        </div>
+    </div>
+    <!-- Phần hiển thị thẻ -->
+    <div class="flashcard-card hidden">
+        <div class="flashcard-front">
+            <h3 id="flashcard-kanji"></h3>
+        </div>
+        <div class="flashcard-back hidden">
+            <p id="flashcard-meaning"></p>
+            <p id="flashcard-hiragana"></p>
+            <p id="flashcard-romaji"></p>
+        </div>
+        <button type="button" id="flip-btn">Lật thẻ</button>
+        <button type="button" id="next-flashcard-btn">Thẻ tiếp theo</button>
+        <button type="button" id="back-to-flashcard-lessons">Quay lại chọn bài học</button>
+    </div>
+</section>
+            <!-- Section Quản lý từ vựng -->
             <section id="vocab-section" class="section hidden">
                 <p id="total-vocab-count">Tổng số từ vựng: 0</p>
                 <form id="add-vocab-form">
@@ -85,16 +128,23 @@
                     <input type="text" id="hiragana" placeholder="Hiragana/Katakana" required>
                     <input type="text" id="romaji" placeholder="Romaji">
                     <input type="text" id="meaning" placeholder="Nghĩa" required>
+                    <input type="text" id="lesson" placeholder="Bài" required>
                     <button type="submit"><i class="fas fa-plus"></i> Thêm</button>
                 </form>
+                <div id="lesson-filter">
+                    <label for="lesson-select">Lọc theo bài học:</label>
+                    <select id="lesson-select">
+                        <option value="all">Tất cả</option>
+                    </select>
+                </div>
                 <div id="import-vocab">
                     <h3>Import Từ Vựng Từ File Excel</h3>
                     <input type="file" id="excelFileInput" accept=".xlsx, .xls">
-                    <button id="import-excel-btn"><i class="fas fa-file-import"></i> Nhập từ vựng (Excel)</button>
+                    <button type="button" id="import-excel-btn"><i class="fas fa-file-import"></i> Nhập từ vựng (Excel)</button>
                     <a href="sample.xlsx" download="sample.xlsx"><i class="fas fa-download"></i> Tải file mẫu</a>
-                    <button id="download-excel-btn" style="margin-left: 10px;"><i class="fas fa-download"></i> Tải file Excel từ vựng</button>
-                    <button id="show-trash-btn" style="float: right;"><i class="fas fa-trash-alt"></i> Hiển thị Thùng Rác</button>
-                    <button id="delete-all-vocab-btn" style="float: right; margin-right: 10px;"><i class="fas fa-trash"></i> Xóa tất cả</button>
+                    <button type="button" id="download-excel-btn" style="margin-left: 10px;"><i class="fas fa-download"></i> Tải file Excel từ vựng</button>
+                    <button type="button" id="show-trash-btn" style="float: right;"><i class="fas fa-trash-alt"></i> Hiển thị Thùng Rác</button>
+                    <button type="button" id="delete-all-vocab-btn" style="float: right; margin-right: 10px;"><i class="fas fa-trash"></i> Xóa tất cả</button>
                 </div>
                 <table id="wordTable">
                     <thead>
@@ -104,6 +154,7 @@
                             <th>Hiragana/Katakana</th>
                             <th>Romaji</th>
                             <th>Nghĩa</th>
+                            <th>Bài</th>
                             <th>Âm thanh</th>
                             <th>Hành động</th>
                         </tr>
@@ -112,11 +163,11 @@
                 </table>
             </section>
 
-            <!-- Thùng rác -->
+            <!-- Section Thùng rác -->
             <section id="trash-section" class="section hidden">
                 <h2>Thùng Rác</h2>
-                <button id="close-trash-btn"><i class="fas fa-times"></i> Đóng</button>
-                <button id="permanent-delete-all-btn" style="float: right; margin-right: 10px;"><i class="fas fa-trash-alt"></i> Xóa vĩnh viễn tất cả</button>
+                <button type="button" id="close-trash-btn"><i class="fas fa-times"></i> Đóng</button>
+                <button type="button" id="permanent-delete-all-btn" style="float: right; margin-right: 10px;"><i class="fas fa-trash-alt"></i> Xóa vĩnh viễn tất cả</button>
                 <table id="trashTable">
                     <thead>
                         <tr>
@@ -124,6 +175,7 @@
                             <th>Hiragana/Katakana</th>
                             <th>Romaji</th>
                             <th>Nghĩa</th>
+                            <th>Bài</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
@@ -131,7 +183,7 @@
                 </table>
             </section>
 
-            <!-- Cài đặt -->
+            <!-- Section Cài đặt -->
             <section id="settings-section" class="section hidden">
                 <div class="setting-item">
                     <label class="switch">
@@ -157,6 +209,7 @@
     <audio id="incorrect-sound" src="sound/incorrect.mp3" preload="auto"></audio>
     <audio id="click-sound" src="sound/click.mp3" preload="auto"></audio>
 
+    <!-- Liên kết đến các file JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="script.js"></script>
 </body>

@@ -1,29 +1,47 @@
-// Khởi tạo mảng từ vựng và thùng rác
-let vocabulary = [];
-let trashBin = [];
-let currentQuestion = null;
-let isRandomized = false; // Mặc định không random câu hỏi
-let isMeaningAlwaysVisible = false;
-let retryQueue = []; // Hàng đợi ôn lại
+// Khởi tạo các biến toàn cục
+let vocabulary = []; // Mảng chứa từ vựng
+let trashBin = []; // Mảng chứa thùng rác
+let currentQuestion = null; // Câu hỏi hiện tại trong quiz
+let isRandomized = false; // Trạng thái random câu hỏi
+let isMeaningAlwaysVisible = false; // Trạng thái hiển thị nghĩa liên tục
+let retryQueue = []; // Hàng đợi từ cần ôn lại
 let questionsSinceLastRetry = 0; // Đếm số câu từ lần ôn lại cuối
-let correctWords = new Set(); // Theo dõi các từ vựng đã trả lời đúng
+let correctWords = new Set(); // Tập hợp các từ đã trả lời đúng
+let filteredVocab = []; // Từ vựng đã lọc cho quiz
 
-// Lấy giá trị từ localStorage hoặc mặc định
+// Lấy giá trị cài đặt từ localStorage hoặc đặt mặc định
 let retryInterval = localStorage.getItem('retryInterval') ? parseInt(localStorage.getItem('retryInterval'), 10) : 10;
 let retryMax = localStorage.getItem('retryMax') ? parseInt(localStorage.getItem('retryMax'), 10) : 3;
 
-// Cập nhật giá trị khi người dùng thay đổi cài đặt
+// Cập nhật cài đặt khi người dùng thay đổi
 document.getElementById('retry-interval').addEventListener('change', (e) => {
     retryInterval = parseInt(e.target.value, 10);
     localStorage.setItem('retryInterval', retryInterval);
 });
+
 document.getElementById('retry-max').addEventListener('change', (e) => {
     retryMax = parseInt(e.target.value, 10);
     localStorage.setItem('retryMax', retryMax);
 });
 
-// Tải từ vựng từ localStorage khi load trang
+// Hàm cập nhật thanh tiến độ
+function updateProgressBar() {
+    if (!filteredVocab || filteredVocab.length === 0) {
+        document.getElementById('progress').style.width = '0%';
+        document.getElementById('progress-text').textContent = '0/0';
+        return;
+    }
+    const totalVocab = filteredVocab.length;
+    const correctInFiltered = filteredVocab.filter(word => correctWords.has(word.originalIndex)).length;
+    const progressPercent = totalVocab > 0 ? (correctInFiltered / totalVocab) * 100 : 0;
+    document.getElementById('progress').style.width = `${progressPercent}%`;
+    document.getElementById('progress-text').textContent = `${correctInFiltered}/${totalVocab}`;
+}
+
+// Tải dữ liệu khi trang được load
 window.addEventListener('load', () => {
+    document.getElementById('start-quiz-btn').disabled = true;
+    
     if (!localStorage.getItem('vocabulary')) {
         fetch('default.xlsx')
             .then(response => response.arrayBuffer())
@@ -38,6 +56,7 @@ window.addEventListener('load', () => {
                         hiragana: row['Hiragana/Katakana'],
                         romaji: romaji,
                         meaning: row['Nghĩa'],
+                        lesson: row['Bài'].toString(),
                         originalIndex: index,
                         retryCount: 0
                     };
@@ -45,37 +64,56 @@ window.addEventListener('load', () => {
                 localStorage.setItem('vocabulary', JSON.stringify(vocabulary));
                 updateTotalVocab();
                 vocabulary.forEach((word, index) => addToTable(word, 'word', index + 1));
+                populateLessonButtons();
+                populateLessonDropdown();
+                filterVocabularyTable();
+                updateSelectedVocabCount();
             });
     } else {
         vocabulary = JSON.parse(localStorage.getItem('vocabulary'));
         vocabulary.forEach(word => {
             if (!word.romaji) word.romaji = wanakana.toRomaji(word.hiragana);
             word.retryCount = word.retryCount || 0;
+            word.lesson = word.lesson.toString();
         });
         localStorage.setItem('vocabulary', JSON.stringify(vocabulary));
         updateTotalVocab();
         vocabulary.forEach((word, index) => addToTable(word, 'word', index + 1));
+        populateLessonButtons();
+        populateLessonDropdown();
+        filterVocabularyTable();
+        updateSelectedVocabCount();
     }
+
     if (localStorage.getItem('trashBin')) {
         trashBin = JSON.parse(localStorage.getItem('trashBin'));
         trashBin.forEach(word => addToTable(word, 'trash'));
     }
 
-    // Khôi phục tiến trình quiz
-    const savedProgress = JSON.parse(localStorage.getItem('quizProgress'));
-    if (savedProgress) {
-        retryQueue = savedProgress.retryQueue.map(index => vocabulary.find(word => word.originalIndex === index));
-        if (!retryQueue) retryQueue = [];
-        correctWords = new Set(savedProgress.correctWords);
-    }
+    document.getElementById('start-quiz-btn').addEventListener('click', () => {
+        const selectedButtons = document.querySelectorAll('.lesson-buttons button.selected');
+        const selectedLessons = Array.from(selectedButtons).map(btn => btn.dataset.lesson);
+        if (selectedLessons.length === 0) {
+            alert('Vui lòng chọn ít nhất một bài học.');
+            return;
+        }
+        filteredVocab = vocabulary.filter(word => selectedLessons.includes(word.lesson.toString()));
+        if (filteredVocab.length < 4) {
+            alert('Không đủ từ vựng (ít nhất 4 từ) để bắt đầu quiz.');
+            return;
+        }
+        correctWords = new Set();
+        retryQueue = [];
+        document.getElementById('lesson-selection').classList.add('hidden');
+        document.querySelector('.quiz-card').classList.remove('hidden');
+        updateProgressBar();
+        loadQuiz();
+    });
 
-    // Đồng bộ giá trị cài đặt từ localStorage
     document.getElementById('retry-interval').value = retryInterval;
     document.getElementById('retry-max').value = retryMax;
+    updateProgressBar();
 
-    updateProgressBar(); // Cập nhật thanh tiến độ khi load trang
-
-    // Kiểm tra chế độ dark mode từ localStorage
     if (localStorage.getItem('darkMode') === 'enabled') {
         document.body.classList.add('dark-mode');
         document.getElementById('dark-mode-toggle').checked = true;
@@ -87,7 +125,42 @@ window.addEventListener('load', () => {
     }
 });
 
-// Chuyển đổi Section
+// Điền danh sách bài học vào nút
+function populateLessonButtons() {
+    const lessons = [...new Set(vocabulary.map(word => word.lesson))].sort((a, b) => a - b);
+    const lessonButtonsContainer = document.getElementById('lesson-buttons');
+    lessonButtonsContainer.innerHTML = '';
+    lessons.forEach(lesson => {
+        const button = document.createElement('button');
+        const lessonLabel = isNaN(lesson) ? lesson : `Bài ${lesson}`;
+        button.textContent = lessonLabel;
+        button.dataset.lesson = lesson;
+        button.addEventListener('click', () => {
+            button.classList.toggle('selected');
+            updateStartQuizButton();
+            updateSelectedVocabCount();
+        });
+        lessonButtonsContainer.appendChild(button);
+    });
+}
+
+// Cập nhật trạng thái nút "Bắt đầu Quiz"
+function updateStartQuizButton() {
+    const selectedButtons = document.querySelectorAll('.lesson-buttons button.selected');
+    const selectedLessons = Array.from(selectedButtons).map(btn => btn.dataset.lesson);
+    const filteredVocabTemp = vocabulary.filter(word => selectedLessons.includes(word.lesson.toString()));
+    const startQuizBtn = document.getElementById('start-quiz-btn');
+    const errorMessage = document.getElementById('error-message');
+    if (filteredVocabTemp.length < 4) {
+        errorMessage.classList.remove('hidden');
+        startQuizBtn.disabled = true;
+    } else {
+        errorMessage.classList.add('hidden');
+        startQuizBtn.disabled = false;
+    }
+}
+
+// Quản lý giao diện các section
 const sections = {
     home: document.getElementById('dashboard'),
     quiz: document.getElementById('quiz-section'),
@@ -101,10 +174,28 @@ function hideAllSections() {
 }
 
 function showSection(sectionId) {
+    // Ẩn tất cả các section trước
     hideAllSections();
+    
+    // Hiển thị section được chọn
     sections[sectionId].classList.remove('hidden');
-    if (sectionId === 'quiz' && currentQuestion == null) {
-        loadQuiz();
+    
+    // Kiểm tra nếu section là "quiz"
+    if (sectionId === 'quiz') {
+        // Lấy trạng thái quiz từ localStorage
+        const quizState = JSON.parse(localStorage.getItem('quizState'));
+        
+        // Kiểm tra xem có trạng thái quiz và câu hỏi hiện tại không phải null
+        if (quizState && quizState.currentQuestion !== null) {
+            // Khôi phục trạng thái quiz và hiển thị thẻ quiz
+            restoreQuizState();
+            document.getElementById('lesson-selection').classList.add('hidden');
+            document.querySelector('.quiz-card').classList.remove('hidden');
+        } else {
+            // Nếu không có trạng thái, hiển thị phần chọn bài học
+            document.getElementById('lesson-selection').classList.remove('hidden');
+            document.querySelector('.quiz-card').classList.add('hidden');
+        }
     }
 }
 
@@ -112,7 +203,6 @@ document.getElementById('nav-home').addEventListener('click', () => showSection(
 document.getElementById('nav-quiz').addEventListener('click', () => showSection('quiz'));
 document.getElementById('nav-vocab').addEventListener('click', () => showSection('vocab'));
 document.getElementById('nav-settings').addEventListener('click', () => showSection('settings'));
-
 showSection('home');
 
 // Xử lý Dark Mode
@@ -132,11 +222,9 @@ document.getElementById('dark-mode-toggle').addEventListener('change', (e) => {
 
 // Cập nhật tổng số từ vựng
 function updateTotalVocab() {
-    const totalVocabElement = document.getElementById('total-vocab');
-    const totalVocabCountElement = document.getElementById('total-vocab-count');
     const total = vocabulary.length;
-    if (totalVocabElement) totalVocabElement.textContent = `Tổng số từ vựng: ${total}`;
-    if (totalVocabCountElement) totalVocabCountElement.textContent = `Tổng số từ vựng: ${total}`;
+    document.getElementById('total-vocab').textContent = `Tổng số từ vựng: ${total}`;
+    document.getElementById('total-vocab-count').textContent = `Tổng số từ vựng: ${total}`;
 }
 
 // Quản lý từ vựng
@@ -144,7 +232,6 @@ const addVocabForm = document.getElementById('add-vocab-form');
 const wordTableBody = document.querySelector('#wordTable tbody');
 const trashTableBody = document.querySelector('#trashTable tbody');
 
-// Hàm thêm từ vựng
 function addVocabulary(word) {
     if (!word.romaji) word.romaji = wanakana.toRomaji(word.hiragana);
     if (vocabulary.some(v => v.kanji === word.kanji && v.hiragana === word.hiragana)) {
@@ -155,10 +242,12 @@ function addVocabulary(word) {
     localStorage.setItem('vocabulary', JSON.stringify(vocabulary));
     addToTable(word, 'word', vocabulary.length);
     updateTotalVocab();
+    populateLessonButtons();
+    populateLessonDropdown();
+    filterVocabularyTable();
     return true;
 }
 
-// Hàm thêm hàng vào bảng
 function addToTable(word, tableType, index) {
     const tableBody = tableType === 'word' ? wordTableBody : trashTableBody;
     const newRow = document.createElement('tr');
@@ -170,6 +259,7 @@ function addToTable(word, tableType, index) {
             <td>${word.hiragana}</td>
             <td>${word.romaji}</td>
             <td>${word.meaning}</td>
+            <td>${word.lesson}</td>
             <td><button onclick="playAudio('${word.hiragana}')">🔊</button></td>
             <td>
                 <button class="edit-btn"><i class="fas fa-edit"></i> Sửa</button>
@@ -182,24 +272,24 @@ function addToTable(word, tableType, index) {
             <td>${word.hiragana}</td>
             <td>${word.romaji}</td>
             <td>${word.meaning}</td>
+            <td>${word.lesson}</td>
             <td><button class="restore-btn"><i class="fas fa-undo"></i> Khôi phục</button></td>
         `;
     }
     tableBody.appendChild(newRow);
 }
 
-// Xử lý thêm từ vựng thủ công
 addVocabForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const kanji = document.getElementById('kanji').value || '';
     const hiragana = document.getElementById('hiragana').value;
     let romaji = document.getElementById('romaji').value;
     const meaning = document.getElementById('meaning').value;
-    const newVocab = { kanji, hiragana, romaji, meaning, originalIndex: vocabulary.length, retryCount: 0 };
+    const lesson = document.getElementById('lesson').value.toString();
+    const newVocab = { kanji, hiragana, romaji, meaning, lesson, originalIndex: vocabulary.length, retryCount: 0 };
     if (addVocabulary(newVocab)) addVocabForm.reset();
 });
 
-// Nhập từ Excel
 document.getElementById('import-excel-btn').addEventListener('click', () => {
     const fileInput = document.getElementById('excelFileInput');
     const file = fileInput.files[0];
@@ -214,18 +304,19 @@ document.getElementById('import-excel-btn').addEventListener('click', () => {
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json(firstSheet);
         let errors = [];
-        for (const row of jsonData) {
+        jsonData.forEach((row, i) => {
             const kanji = row['Kanji'] || '';
             const hiragana = row['Hiragana/Katakana'];
             let romaji = row['Romaji'] || '';
             const meaning = row['Nghĩa'];
-            if (!hiragana || !meaning) {
-                errors.push(`Dòng ${jsonData.indexOf(row) + 1}: Thiếu trường bắt buộc`);
-                continue;
+            const lesson = row['Bài'].toString();
+            if (!hiragana || !meaning || !lesson) {
+                errors.push(`Dòng ${i + 1}: Thiếu trường bắt buộc`);
+                return;
             }
-            const newVocab = { kanji, hiragana, romaji, meaning, originalIndex: vocabulary.length, retryCount: 0 };
-            if (!addVocabulary(newVocab)) errors.push(`Dòng ${jsonData.indexOf(row) + 1}: Từ vựng đã tồn tại`);
-        }
+            const newVocab = { kanji, hiragana, romaji, meaning, lesson, originalIndex: vocabulary.length, retryCount: 0 };
+            if (!addVocabulary(newVocab)) errors.push(`Dòng ${i + 1}: Từ vựng đã tồn tại`);
+        });
         if (errors.length > 0) alert(`Import hoàn tất với lỗi:\n${errors.join('\n')}`);
         else alert('Import thành công!');
         fileInput.value = '';
@@ -233,20 +324,19 @@ document.getElementById('import-excel-btn').addEventListener('click', () => {
     reader.readAsArrayBuffer(file);
 });
 
-// Tải file Excel từ vựng
 document.getElementById('download-excel-btn').addEventListener('click', () => {
     const worksheet = XLSX.utils.json_to_sheet(vocabulary.map(v => ({
         Kanji: v.kanji || 'N/A',
         'Hiragana/Katakana': v.hiragana,
         Romaji: v.romaji,
-        Nghĩa: v.meaning
+        Nghĩa: v.meaning,
+        Bài: v.lesson
     })));
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Từ vựng');
     XLSX.writeFile(workbook, 'vocabulary.xlsx');
 });
 
-// Xử lý xóa và sửa từ vựng
 wordTableBody.addEventListener('click', (e) => {
     const row = e.target.closest('tr');
     if (e.target.classList.contains('delete-btn')) {
@@ -255,6 +345,7 @@ wordTableBody.addEventListener('click', (e) => {
             hiragana: row.cells[2].textContent,
             romaji: row.cells[3].textContent,
             meaning: row.cells[4].textContent,
+            lesson: row.cells[5].textContent,
             originalIndex: vocabulary.find(v => v.hiragana === row.cells[2].textContent).originalIndex,
             retryCount: 0
         };
@@ -266,27 +357,38 @@ wordTableBody.addEventListener('click', (e) => {
         document.getElementById('hiragana').value = word.hiragana;
         document.getElementById('romaji').value = word.romaji;
         document.getElementById('meaning').value = word.meaning;
+        document.getElementById('lesson').value = word.lesson;
         const originalSubmitHandler = addVocabForm.onsubmit;
         addVocabForm.onsubmit = (e) => {
             e.preventDefault();
             const updatedKanji = document.getElementById('kanji').value || '';
             const updatedHiragana = document.getElementById('hiragana').value;
-            let updatedRomaji = document.getElementById('romaji').value;
+            let updatedRomaji = document.getElementById('romaji').value || wanakana.toRomaji(updatedHiragana);
             const updatedMeaning = document.getElementById('meaning').value;
-            if (!updatedRomaji) updatedRomaji = wanakana.toRomaji(updatedHiragana);
-            vocabulary[index] = { kanji: updatedKanji, hiragana: updatedHiragana, romaji: updatedRomaji, meaning: updatedMeaning, originalIndex: word.originalIndex, retryCount: word.retryCount };
+            const updatedLesson = document.getElementById('lesson').value.toString();
+            vocabulary[index] = { kanji: updatedKanji, hiragana: updatedHiragana, romaji: updatedRomaji, meaning: updatedMeaning, lesson: updatedLesson, originalIndex: word.originalIndex, retryCount: word.retryCount };
             localStorage.setItem('vocabulary', JSON.stringify(vocabulary));
             row.cells[1].textContent = updatedKanji || 'N/A';
             row.cells[2].textContent = updatedHiragana;
             row.cells[3].textContent = updatedRomaji;
             row.cells[4].textContent = updatedMeaning;
+            row.cells[5].textContent = updatedLesson;
+
+            row.classList.add('highlight');
+            setTimeout(() => row.classList.remove('highlight'), 5000);
+
+            const notification = document.getElementById('notification');
+            notification.classList.remove('hidden');
+            setTimeout(() => notification.classList.add('hidden'), 3000);
+
             addVocabForm.reset();
             addVocabForm.onsubmit = originalSubmitHandler;
+            populateLessonDropdown();
+            filterVocabularyTable();
         };
     }
 });
 
-// Xóa tất cả từ vựng
 document.getElementById('delete-all-vocab-btn').addEventListener('click', () => {
     if (confirm('Bạn có chắc chắn muốn xóa tất cả từ vựng?')) {
         trashBin.push(...vocabulary);
@@ -296,10 +398,11 @@ document.getElementById('delete-all-vocab-btn').addEventListener('click', () => 
         wordTableBody.innerHTML = '';
         updateTotalVocab();
         trashBin.forEach(word => addToTable(word, 'trash'));
+        populateLessonDropdown();
+        filterVocabularyTable();
     }
 });
 
-// Xóa vĩnh viễn trong thùng rác
 document.getElementById('permanent-delete-all-btn').addEventListener('click', () => {
     if (confirm('Bạn có chắc chắn muốn xóa vĩnh viễn tất cả từ vựng trong thùng rác?')) {
         trashBin = [];
@@ -308,7 +411,6 @@ document.getElementById('permanent-delete-all-btn').addEventListener('click', ()
     }
 });
 
-// Hàm xóa từ vựng
 function deleteVocabulary(word, row) {
     const index = vocabulary.findIndex(v => v.hiragana === word.hiragana);
     if (index > -1) {
@@ -319,10 +421,11 @@ function deleteVocabulary(word, row) {
         row.remove();
         updateTotalVocab();
         addToTable(word, 'trash');
+        populateLessonDropdown();
+        filterVocabularyTable();
     }
 }
 
-// Khôi phục từ vựng
 trashTableBody.addEventListener('click', (e) => {
     if (e.target.classList.contains('restore-btn')) {
         const row = e.target.closest('tr');
@@ -331,6 +434,7 @@ trashTableBody.addEventListener('click', (e) => {
             hiragana: row.cells[1].textContent,
             romaji: row.cells[2].textContent,
             meaning: row.cells[3].textContent,
+            lesson: row.cells[4].textContent,
             originalIndex: trashBin.find(v => v.hiragana === row.cells[1].textContent).originalIndex,
             retryCount: 0
         };
@@ -350,10 +454,11 @@ function restoreVocabulary(word, row) {
         wordTableBody.innerHTML = '';
         vocabulary.forEach((word, i) => addToTable(word, 'word', i + 1));
         updateTotalVocab();
+        populateLessonDropdown();
+        filterVocabularyTable();
     }
 }
 
-// Hiển thị/Ẩn thùng rác
 document.getElementById('show-trash-btn').addEventListener('click', () => showSection('trash'));
 document.getElementById('close-trash-btn').addEventListener('click', () => showSection('vocab'));
 
@@ -363,59 +468,57 @@ const quizMeaning = document.getElementById('quiz-meaning');
 const optionBtns = document.querySelectorAll('.option-btn');
 const quizFeedback = document.getElementById('quiz-feedback');
 let currentQuizHiragana = '';
-let currentQuizIndex = -1; // Theo dõi câu hỏi hiện tại
+let currentQuizIndex = -1;
+
+document.getElementById('back-to-lessons').addEventListener('click', () => {
+    saveQuizState();
+    document.getElementById('lesson-selection').classList.remove('hidden');
+    document.querySelector('.quiz-card').classList.add('hidden');
+});
+
+document.getElementById('select-all-btn').addEventListener('click', () => {
+    const buttons = document.querySelectorAll('.lesson-buttons button');
+    buttons.forEach(button => button.classList.add('selected'));
+    updateStartQuizButton();
+    updateSelectedVocabCount();
+});
 
 function loadQuiz() {
-    if (vocabulary.length === 0) {
-        quizKanji.textContent = 'Không có từ vựng';
-        quizMeaning.classList.add('hidden');
-        optionBtns.forEach(btn => {
-            btn.textContent = '';
-            btn.disabled = true;
-        });
-        quizFeedback.textContent = '';
+    if (filteredVocab.length < 4) {
+        alert('Có lỗi: Không đủ từ vựng để tiếp tục quiz.');
+        showSection('quiz');
         return;
     }
 
-    // Kiểm tra nếu có từ cần ôn lại trong retryQueue và đã trả lời đủ số câu
-    if (retryQueue.length > 0 && questionsSinceLastRetry >= retryInterval) {
+    if (retryQueue.length && questionsSinceLastRetry >= retryInterval) {
         currentQuestion = retryQueue.shift();
-        questionsSinceLastRetry = 0; // Reset đếm câu sau khi ôn lại
+        questionsSinceLastRetry = 0;
     } else {
         if (isRandomized) {
             let randomIndex;
             do {
-                randomIndex = Math.floor(Math.random() * vocabulary.length);
-            } while (vocabulary[randomIndex] === currentQuestion); // Tránh lặp lại câu hiện tại
-            currentQuestion = vocabulary[randomIndex];
+                randomIndex = Math.floor(Math.random() * filteredVocab.length);
+            } while (filteredVocab[randomIndex] === currentQuestion);
+            currentQuestion = filteredVocab[randomIndex];
         } else {
-            currentQuizIndex = (currentQuizIndex + 1) % vocabulary.length;
-            currentQuestion = vocabulary[currentQuizIndex];
+            currentQuizIndex = (currentQuizIndex + 1) % filteredVocab.length;
+            currentQuestion = filteredVocab[currentQuizIndex];
         }
     }
 
-    if (currentQuestion.kanji) {
-        quizKanji.textContent = currentQuestion.kanji;
-    } else {
-        quizKanji.textContent = currentQuestion.hiragana;
-    }
-
+    quizKanji.textContent = currentQuestion.kanji || currentQuestion.hiragana;
     quizMeaning.textContent = currentQuestion.meaning;
     currentQuizHiragana = currentQuestion.hiragana;
 
     const correctOption = currentQuestion.hiragana;
-    const similarOptions = getSimilarWords(currentQuestion, vocabulary, 3);
+    const similarOptions = getSimilarWords(currentQuestion, filteredVocab, 3);
     const options = [correctOption, ...similarOptions.map(opt => opt.hiragana)];
-    if (options.length < 4) {
-        while (options.length < 4) {
-            const randomOption = vocabulary[Math.floor(Math.random() * vocabulary.length)].hiragana;
-            if (!options.includes(randomOption)) options.push(randomOption);
-        }
+    while (options.length < 4) {
+        const randomOption = filteredVocab[Math.floor(Math.random() * filteredVocab.length)].hiragana;
+        if (!options.includes(randomOption)) options.push(randomOption);
     }
 
-    // Luôn xáo trộn tùy chọn
     options.sort(() => Math.random() - 0.5);
-
     optionBtns.forEach((btn, index) => {
         btn.textContent = options[index];
         btn.disabled = false;
@@ -424,6 +527,7 @@ function loadQuiz() {
     });
 
     quizFeedback.textContent = '';
+    saveQuizState();
 }
 
 function getSimilarWords(correctWord, allWords, numOptions = 3) {
@@ -440,95 +544,75 @@ function checkAnswer(selectedBtn, correct) {
     const selected = selectedBtn.textContent;
     optionBtns.forEach(btn => {
         btn.disabled = true;
-        if (btn.textContent === correct) {
-            btn.classList.add('correct');
-        } else if (btn === selectedBtn) {
-            btn.classList.add('incorrect');
-        }
+        if (btn.textContent === correct) btn.classList.add('correct');
+        else if (btn === selectedBtn) btn.classList.add('incorrect');
     });
 
     if (selected === correct) {
-        if (!correctWords.has(currentQuestion.originalIndex)) {
-            correctWords.add(currentQuestion.originalIndex);
-        }
+        if (!correctWords.has(currentQuestion.originalIndex)) correctWords.add(currentQuestion.originalIndex);
         quizFeedback.innerHTML = `Đúng rồi! ${currentQuestion.hiragana} <span style="color: #1e90ff;">(${currentQuestion.romaji})</span>`;
         quizFeedback.style.color = '#28a745';
-        document.getElementById('correct-sound').play();
-        currentQuestion.retryCount = 0; // Reset retryCount nếu trả lời đúng
+        const correctSound = document.getElementById('correct-sound');
+        if (correctSound) correctSound.play();
+        currentQuestion.retryCount = 0;
     } else {
         quizFeedback.innerHTML = `Sai rồi! Đáp án: ${correct} <span style="color: #1e90ff;">(${currentQuestion.romaji})</span>`;
         quizFeedback.style.color = '#dc3545';
-        document.getElementById('incorrect-sound').play();
+        const incorrectSound = document.getElementById('incorrect-sound');
+        if (incorrectSound) incorrectSound.play();
         if (currentQuestion.retryCount < retryMax) {
             currentQuestion.retryCount++;
-            if (!retryQueue.includes(currentQuestion)) {
-                retryQueue.push(currentQuestion);
-            }
+            if (!retryQueue.includes(currentQuestion)) retryQueue.push(currentQuestion);
         }
     }
 
-    questionsSinceLastRetry++; // Tăng số câu đã trả lời
-    updateProgressBar(); // Cập nhật thanh tiến độ
-    saveQuizProgress(); // Lưu tiến trình
+    questionsSinceLastRetry++;
+    updateProgressBar();
+    saveQuizState();
 }
 
-// Phát âm trong quiz
 function playQuizAudio() {
-    const textToSpeak = quizKanji.textContent;
-    playAudio(textToSpeak);
+    playAudio(quizKanji.textContent);
 }
 
-// Nút điều hướng Quiz
 document.getElementById('quiz-next').addEventListener('click', loadQuiz);
 document.getElementById('quiz-restart').addEventListener('click', () => {
     retryQueue = [];
-    correctWords.clear(); // Xóa tất cả từ đã trả lời đúng
-    currentQuizIndex = -1; // Reset index câu hỏi
+    correctWords.clear();
+    currentQuizIndex = -1;
     loadQuiz();
-    updateProgressBar(); // Cập nhật thanh tiến độ
+    updateProgressBar();
 });
 
-// Hiển thị nghĩa trong quiz
 document.getElementById('show-meaning-btn').addEventListener('click', () => {
     isMeaningAlwaysVisible = !isMeaningAlwaysVisible;
     document.getElementById('show-meaning-btn').classList.toggle('active', isMeaningAlwaysVisible);
-    const meaning = document.getElementById('quiz-meaning');
-    if (isMeaningAlwaysVisible) {
-        meaning.classList.remove('hidden');
-    } else {
-        meaning.classList.add('hidden');
-    }
+    quizMeaning.classList.toggle('hidden', !isMeaningAlwaysVisible);
+    saveQuizState();
 });
 
-// Phát âm từ vựng
 function playAudio(text) {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ja-JP';
     speechSynthesis.speak(utterance);
 }
 
-// Âm thanh khi click nút
 const clickSoundButtons = document.querySelectorAll('.sidebar li, .navigation button, #quick-quiz, #quick-add-vocab, #reset-vocab');
 clickSoundButtons.forEach(button => {
     button.addEventListener('click', () => {
-        document.getElementById('click-sound').play();
+        const clickSound = document.getElementById('click-sound');
+        if (clickSound) clickSound.play();
     });
 });
 
-// Toggle random đáp án và load câu hỏi mới khi bật/tắt
 document.getElementById('randomize-options-toggle').addEventListener('change', (e) => {
     isRandomized = e.target.checked;
-    loadQuiz(); // Load câu hỏi mới ngay lập tức
-});
-
-// Nút liên kết nhanh trên trang chủ
-document.getElementById('quick-quiz').addEventListener('click', () => {
-    showSection('quiz');
     loadQuiz();
 });
+
+document.getElementById('quick-quiz').addEventListener('click', () => showSection('quiz'));
 document.getElementById('quick-add-vocab').addEventListener('click', () => showSection('vocab'));
 
-// Nút reset từ vựng mặc định
 document.getElementById('reset-vocab').addEventListener('click', () => {
     if (confirm('Bạn có chắc chắn muốn reset từ vựng về mặc định?')) {
         fetch('default.xlsx')
@@ -544,6 +628,7 @@ document.getElementById('reset-vocab').addEventListener('click', () => {
                         hiragana: row['Hiragana/Katakana'],
                         romaji: romaji,
                         meaning: row['Nghĩa'],
+                        lesson: row['Bài'].toString(),
                         originalIndex: index,
                         retryCount: 0
                     };
@@ -552,31 +637,93 @@ document.getElementById('reset-vocab').addEventListener('click', () => {
                 updateTotalVocab();
                 wordTableBody.innerHTML = '';
                 vocabulary.forEach((word, index) => addToTable(word, 'word', index + 1));
+                populateLessonButtons();
+                populateLessonDropdown();
+                filterVocabularyTable();
                 alert('Đã reset từ vựng về mặc định.');
             });
     }
 });
 
-// Lưu tiến trình quiz
-function saveQuizProgress() {
-    const quizProgress = {
+// Hàm lưu trạng thái quiz
+function saveQuizState() {
+    const quizState = {
+        filteredVocab: filteredVocab.map(word => word.originalIndex),
+        correctWords: Array.from(correctWords),
         retryQueue: retryQueue.map(word => word.originalIndex),
-        correctWords: Array.from(correctWords)
+        currentQuestion: currentQuestion ? currentQuestion.originalIndex : null,
+        currentQuizIndex: currentQuizIndex,
+        questionsSinceLastRetry: questionsSinceLastRetry,
+        isRandomized: isRandomized,
+        isMeaningAlwaysVisible: isMeaningAlwaysVisible
     };
-    localStorage.setItem('quizProgress', JSON.stringify(quizProgress));
+    localStorage.setItem('quizState', JSON.stringify(quizState));
 }
 
-// Cập nhật thanh tiến độ
-function updateProgressBar() {
-    const totalVocab = vocabulary.length;
-    const progressPercent = totalVocab > 0 ? (correctWords.size / totalVocab) * 100 : 0;
-    document.getElementById('progress').style.width = `${progressPercent}%`;
-    document.getElementById('progress-text').textContent = `${correctWords.size}/${totalVocab}`;
-    document.addEventListener('DOMContentLoaded', function() {
-        var showMeaningBtn = document.getElementById('show-meaning-btn');
-        showMeaningBtn.addEventListener('click', function() {
-          this.classList.toggle('active');
-        });
-      });
-          
+// Hàm khôi phục trạng thái quiz
+function restoreQuizState() {
+    const quizState = JSON.parse(localStorage.getItem('quizState'));
+    if (quizState) {
+        filteredVocab = quizState.filteredVocab.map(index => vocabulary.find(word => word.originalIndex === index));
+        correctWords = new Set(quizState.correctWords);
+        retryQueue = quizState.retryQueue.map(index => vocabulary.find(word => word.originalIndex === index));
+        currentQuestion = quizState.currentQuestion ? vocabulary.find(word => word.originalIndex === quizState.currentQuestion) : null;
+        currentQuizIndex = quizState.currentQuizIndex;
+        questionsSinceLastRetry = quizState.questionsSinceLastRetry;
+        isRandomized = quizState.isRandomized;
+        isMeaningAlwaysVisible = quizState.isMeaningAlwaysVisible;
+
+        updateProgressBar();
+        if (currentQuestion) {
+            loadQuiz();
+            if (isMeaningAlwaysVisible) {
+                document.getElementById('quiz-meaning').classList.remove('hidden');
+                document.getElementById('show-meaning-btn').classList.add('active');
+            } else {
+                document.getElementById('quiz-meaning').classList.add('hidden');
+                document.getElementById('show-meaning-btn').classList.remove('active');
+            }
+        }
+    }
+}
+
+// Hàm điền danh sách bài học vào dropdown
+function populateLessonDropdown() {
+    const lessonSelect = document.getElementById('lesson-select');
+    const lessons = [...new Set(vocabulary.map(word => word.lesson))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    while (lessonSelect.options.length > 1) {
+        lessonSelect.remove(1);
+    }
+    lessons.forEach(lesson => {
+        const option = document.createElement('option');
+        option.value = lesson;
+        const lessonLabel = isNaN(lesson) ? lesson : `Bài ${lesson}`;
+        option.textContent = lessonLabel;
+        lessonSelect.appendChild(option);
+    });
+}
+
+// Hàm lọc bảng từ vựng dựa trên bài học được chọn
+function filterVocabularyTable() {
+    const selectedLesson = document.getElementById('lesson-select').value;
+    const rows = wordTableBody.querySelectorAll('tr');
+    rows.forEach(row => {
+        const lessonCell = row.cells[5].textContent;
+        if (selectedLesson === 'all' || lessonCell === selectedLesson) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+document.getElementById('lesson-select').addEventListener('change', filterVocabularyTable);
+
+// Cập nhật số lượng từ vựng đã chọn trong phần Quiz
+function updateSelectedVocabCount() {
+    const selectedButtons = document.querySelectorAll('.lesson-buttons button.selected');
+    const selectedLessons = Array.from(selectedButtons).map(btn => btn.dataset.lesson);
+    const filteredVocabTemp = vocabulary.filter(word => selectedLessons.includes(word.lesson.toString()));
+    const selectedCount = filteredVocabTemp.length;
+    document.getElementById('selected-vocab-count').textContent = `Đã chọn: ${selectedCount} từ vựng`;
 }
