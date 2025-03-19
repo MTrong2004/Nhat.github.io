@@ -727,3 +727,18 @@ function updateSelectedVocabCount() {
     const selectedCount = filteredVocabTemp.length;
     document.getElementById('selected-vocab-count').textContent = `Đã chọn: ${selectedCount} từ vựng`;
 }
+function populateFlashcardLessonButtons() {
+    const lessons = [...new Set(vocabulary.map(word => word.lesson))].sort((a, b) => a - b);
+    const lessonButtonsContainer = document.getElementById('flashcard-lesson-buttons');
+    lessonButtonsContainer.innerHTML = '';
+    lessons.forEach(lesson => {
+        const button = document.createElement('button');
+        const lessonLabel = isNaN(lesson) ? lesson : `Bài ${lesson}`;
+        button.textContent = lessonLabel;
+        button.dataset.lesson = lesson;
+        button.addEventListener('click', () => {
+            button.classList.toggle('selected');
+        });
+        lessonButtonsContainer.appendChild(button);
+    });
+}
